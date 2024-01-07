@@ -18,8 +18,8 @@ var app = builder.Build();
 app.AddCommand((ILogger<Program> logger,
     [Option('p', Description = "Project file name, e.g. /path/to/project/myproject.csproj")]
     [PathExists] string project,
-    [Option('j', Description = "JSON file to output results to")] string? jsonfile,
-    [Option('c', Description = "CSV file to output results to")] string? csvfile
+    [Option('j', Description = "JSON file to output results to, or - for stdout and . for using same name as project file")] string? jsonfile,
+    [Option('c', Description = "CSV file to output results to, or - for stdout and . for using same name as project file")] string? csvfile
     ) =>
 {
     var projectFilePackageReferences = new List<Models.PackageReference>();
