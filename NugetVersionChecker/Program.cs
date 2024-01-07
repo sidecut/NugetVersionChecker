@@ -26,24 +26,6 @@ app.AddCommand((ILogger<Program> logger,
     logger.LogInformation("Analyzing project file {project}:", project);
     var projectFile = XDocument.Load(project);
 
-    // // Detect SDK style project file
-    // var packages = projectFile.Descendants("PackageReference");
-    // foreach (var package in packages)
-    // {
-    //     var name = package.Attribute("Include")?.Value;
-    //     var version = package.Attribute("Version")?.Value;
-    //     logger.LogInformation("  {name} {version}", name, version);
-    // }
-
-    // // Detect legacy project file
-    // var packagesConfig = projectFile.Descendants("Package");
-    // foreach (var package in packagesConfig)
-    // {
-    //     var name = package.Attribute("id")?.Value;
-    //     var version = package.Attribute("version")?.Value;
-    //     logger.LogInformation("  {name} {version}", name, version);
-    // }
-
     // Detect package references in project file
     var references = projectFile.Descendants(msbuild2003 + "Reference");
     foreach (var packageReference in references)
@@ -60,7 +42,7 @@ app.AddCommand((ILogger<Program> logger,
         packageReferences.Add(new Models.PackageReference(name!, version));
     }
     // Console.WriteLine(JsonSerializer.Serialize(packageReferences, jsonIndentOptions));
-    Console.WriteLine(JsonSerializer.Serialize(
+    logger.LogDebug(JsonSerializer.Serialize(
         packageReferences.Where(x => x.Version is not null).OrderBy(x => x.Name).ThenBy(x => x.Version), jsonIndentOptions));
 });
 
