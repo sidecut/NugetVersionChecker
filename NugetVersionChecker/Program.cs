@@ -20,7 +20,7 @@ app.AddCommand((ILogger<Program> logger,
     [PathExists] string project) =>
 {
     var projectFilePackageReferences = new List<Models.PackageReference>();
-    var packageConfigFilePackageReferences = new List<Models.PackageReference>();
+    var packageConfigFileReferences = new List<Models.PackageReference>();
 
     var msbuild2003 = XNamespace.Get("http://schemas.microsoft.com/developer/msbuild/2003");
 
@@ -44,7 +44,7 @@ app.AddCommand((ILogger<Program> logger,
         logger.LogDebug("  {name} {version}", name, version);
         projectFilePackageReferences.Add(new Models.PackageReference(name!, version));
     }
-    logger.LogDebug(JsonSerializer.Serialize(
+    logger.LogDebug("{projectFilePackageReferences}", JsonSerializer.Serialize(
         projectFilePackageReferences.Where(x => x.Version is not null).OrderBy(x => x.Name).ThenBy(x => x.Version), jsonIndentOptions));
 
     //
@@ -61,11 +61,11 @@ app.AddCommand((ILogger<Program> logger,
             var id = packageElement.Attribute("id")?.Value;
             var version = packageElement.Attribute("version")?.Value;
             logger.LogDebug("  {id} {version}", id, version);
-            packageConfigFilePackageReferences.Add(new Models.PackageReference(id!, version));
+            packageConfigFileReferences.Add(new Models.PackageReference(id!, version));
         }
         // Console.WriteLine(JsonSerializer.Serialize(packageReferences, jsonIndentOptions));
-        logger.LogDebug(JsonSerializer.Serialize(
-            packageConfigFilePackageReferences.Where(x => x.Version is not null).OrderBy(x => x.Name).ThenBy(x => x.Version), jsonIndentOptions));
+        logger.LogDebug("{packageConfigFileReferences}", JsonSerializer.Serialize(
+            packageConfigFileReferences.Where(x => x.Version is not null).OrderBy(x => x.Name).ThenBy(x => x.Version), jsonIndentOptions));
     }
 
     //
@@ -74,7 +74,7 @@ app.AddCommand((ILogger<Program> logger,
     var differences = new List<Models.PackageReferenceDifference>();
     foreach (var projectFilePackageReference in projectFilePackageReferences)
     {
-        var packageConfigFilePackageReference = packageConfigFilePackageReferences.FirstOrDefault(x => x.Name.Equals(projectFilePackageReference.Name, StringComparison.CurrentCultureIgnoreCase));
+        var packageConfigFilePackageReference = packageConfigFileReferences.FirstOrDefault(x => x.Name.Equals(projectFilePackageReference.Name, StringComparison.CurrentCultureIgnoreCase));
         if (packageConfigFilePackageReference is null)
         {
             // Add this difference if the package is not in packages.config
@@ -88,10 +88,9 @@ app.AddCommand((ILogger<Program> logger,
     }
 
     // Print differences
-    if (differences.Any())
+    if (differences.Count != 0)
     {
-        logger.LogInformation("Differences:");
-        logger.LogInformation(JsonSerializer.Serialize(differences, jsonIndentOptions));
+        logger.LogInformation("Differences:\n{differences}", JsonSerializer.Serialize(differences, jsonIndentOptions));
     }
     else
     {
