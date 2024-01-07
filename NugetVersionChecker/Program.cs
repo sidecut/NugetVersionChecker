@@ -19,14 +19,17 @@ app.AddCommand((ILogger<Program> logger,
     [Option('p', Description = "Project file name, e.g. /path/to/project/myproject.csproj")]
     [PathExists] string project) =>
 {
-    var packageReferences = new List<Models.PackageReference>();
+    var projectFilePackageReferences = new List<Models.PackageReference>();
+    var packageConfigFilePackageReferences = new List<Models.PackageReference>();
 
     var msbuild2003 = XNamespace.Get("http://schemas.microsoft.com/developer/msbuild/2003");
 
     logger.LogInformation("Analyzing project file {project}:", project);
     var projectFile = XDocument.Load(project);
 
+    //
     // Detect package references in project file
+    //
     var references = projectFile.Descendants(msbuild2003 + "Reference");
     foreach (var packageReference in references)
     {
@@ -39,11 +42,61 @@ app.AddCommand((ILogger<Program> logger,
         var version = pairs.FirstOrDefault(x => x.Key.Equals("Version", StringComparison.CurrentCultureIgnoreCase)).Value;
 
         logger.LogDebug("  {name} {version}", name, version);
-        packageReferences.Add(new Models.PackageReference(name!, version));
+        projectFilePackageReferences.Add(new Models.PackageReference(name!, version));
     }
-    // Console.WriteLine(JsonSerializer.Serialize(packageReferences, jsonIndentOptions));
     logger.LogDebug(JsonSerializer.Serialize(
-        packageReferences.Where(x => x.Version is not null).OrderBy(x => x.Name).ThenBy(x => x.Version), jsonIndentOptions));
+        projectFilePackageReferences.Where(x => x.Version is not null).OrderBy(x => x.Name).ThenBy(x => x.Version), jsonIndentOptions));
+
+    //
+    // Detect package references in packages.config
+    //
+    var packagesConfig = Path.Combine(Path.GetDirectoryName(project)!, "packages.config");
+    if (File.Exists(packagesConfig))
+    {
+        logger.LogInformation("Analyzing packages.config file {packagesConfig}:", packagesConfig);
+        var packages = XDocument.Load(packagesConfig);
+        var packageElements = packages.Descendants("package");
+        foreach (var packageElement in packageElements)
+        {
+            var id = packageElement.Attribute("id")?.Value;
+            var version = packageElement.Attribute("version")?.Value;
+            logger.LogDebug("  {id} {version}", id, version);
+            packageConfigFilePackageReferences.Add(new Models.PackageReference(id!, version));
+        }
+        // Console.WriteLine(JsonSerializer.Serialize(packageReferences, jsonIndentOptions));
+        logger.LogDebug(JsonSerializer.Serialize(
+            packageConfigFilePackageReferences.Where(x => x.Version is not null).OrderBy(x => x.Name).ThenBy(x => x.Version), jsonIndentOptions));
+    }
+
+    //
+    // Detect differences between project file and packages.config
+    //
+    var differences = new List<Models.PackageReferenceDifference>();
+    foreach (var projectFilePackageReference in projectFilePackageReferences)
+    {
+        var packageConfigFilePackageReference = packageConfigFilePackageReferences.FirstOrDefault(x => x.Name.Equals(projectFilePackageReference.Name, StringComparison.CurrentCultureIgnoreCase));
+        if (packageConfigFilePackageReference is null)
+        {
+            // Add this difference if the package is not in packages.config
+            // differences.Add(new Models.PackageReferenceDifference(projectFilePackageReference.Name, projectFilePackageReference.Version, null));
+        }
+        else if (projectFilePackageReference.Version != packageConfigFilePackageReference.Version)
+        {
+            // Add this difference if the package is in packages.config but the version is different
+            differences.Add(new Models.PackageReferenceDifference(projectFilePackageReference.Name, projectFilePackageReference.Version, packageConfigFilePackageReference.Version));
+        }
+    }
+
+    // Print differences
+    if (differences.Any())
+    {
+        logger.LogInformation("Differences:");
+        logger.LogInformation(JsonSerializer.Serialize(differences, jsonIndentOptions));
+    }
+    else
+    {
+        logger.LogInformation("No differences found.");
+    }
 });
 
 app.Run();
