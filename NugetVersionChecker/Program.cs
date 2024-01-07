@@ -101,13 +101,13 @@ app.AddCommand((ILogger<Program> logger,
         {
             csvfile = Path.GetFileNameWithoutExtension(project) + ".csv";
         }
-        else if (!csvfile.EndsWith(".csv"))
+        else if (csvfile != "-" && !csvfile.EndsWith(".csv"))
         {
             // If no CSV extension, add it
             csvfile += ".csv";
         }
 
-        logger.LogInformation("Writing CSV to {csvfile}", csvfile);
+        logger.LogInformation("Writing CSV to {csvfile}", csvfile == "-" ? "console:" : csvfile);
 
         using var writer = csvfile == "-" ? Console.Out : new StreamWriter(csvfile);
         writer.WriteLine("Name,ProjectFileVersion,PackagesConfigVersion");
@@ -125,13 +125,13 @@ app.AddCommand((ILogger<Program> logger,
         {
             jsonfile = Path.GetFileNameWithoutExtension(project) + ".json";
         }
-        else if (!jsonfile.EndsWith(".json"))
+        else if (jsonfile != "-" && !jsonfile.EndsWith(".json"))
         {
             // if no JSON extension, add it
             jsonfile += ".json";
         }
 
-        logger.LogInformation("Writing JSON to {jsonfile}", jsonfile);
+        logger.LogInformation("Writing JSON to {jsonfile}", jsonfile == "-" ? "console:" : jsonfile);
         using var writer = jsonfile == "-" ? Console.Out : new StreamWriter(jsonfile);
         writer.WriteLine(JsonSerializer.Serialize(differences, jsonIndentOptions));
     }
