@@ -96,9 +96,14 @@ app.AddCommand((ILogger<Program> logger,
     // Print differences
     if (csvfile is not null)
     {
-        // If no CSV extension, add it
-        if (!csvfile.EndsWith(".csv"))
+        // If filename is `.`, make it base filename plus .csv
+        if (csvfile == ".")
         {
+            csvfile = Path.GetFileNameWithoutExtension(project) + ".csv";
+        }
+        else if (!csvfile.EndsWith(".csv"))
+        {
+            // If no CSV extension, add it
             csvfile += ".csv";
         }
 
@@ -115,9 +120,14 @@ app.AddCommand((ILogger<Program> logger,
     // print differences to JSON file `jsonfile`
     if (jsonfile is not null)
     {
-        // if no JSON extension, add it
-        if (!jsonfile.EndsWith(".json"))
+        // If filename is `.`, make it base filename plus .json
+        if (jsonfile == ".")
         {
+            jsonfile = Path.GetFileNameWithoutExtension(project) + ".json";
+        }
+        else if (!jsonfile.EndsWith(".json"))
+        {
+            // if no JSON extension, add it
             jsonfile += ".json";
         }
 
