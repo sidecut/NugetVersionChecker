@@ -94,6 +94,8 @@ app.AddCommand((ILogger<Program> logger,
     if (csvfile is not null)
     {
         // Print CSV to file `csvfile`
+        logger.LogInformation("Writing CSV to {csvfile}", csvfile);
+
         using var writer = csvfile == "-" ? Console.Out : new StreamWriter(csvfile);
         writer.WriteLine("Name,ProjectFileVersion,PackagesConfigVersion");
         foreach (var difference in differences)
@@ -105,6 +107,7 @@ app.AddCommand((ILogger<Program> logger,
     // print differences to JSON file `jsonfile`
     if (jsonfile is not null)
     {
+        logger.LogInformation("Writing JSON to {jsonfile}", jsonfile);
         using var writer = jsonfile == "-" ? Console.Out : new StreamWriter(jsonfile);
         writer.WriteLine(JsonSerializer.Serialize(differences, jsonIndentOptions));
     }
@@ -112,6 +115,7 @@ app.AddCommand((ILogger<Program> logger,
     // If neither jsonfile nor csvfile is specified, print to console
     if (jsonfile is null && csvfile is null)
     {
+        logger.LogInformation("Writing JSON to console");
         Console.WriteLine(JsonSerializer.Serialize(differences, jsonIndentOptions));
     }
 });
