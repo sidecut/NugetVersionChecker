@@ -18,7 +18,9 @@ var app = builder.Build();
 app.AddCommand((ILogger<Program> logger,
     [Option('p', Description = "Project file name, e.g. /path/to/project/myproject.csproj")]
     [PathExists] string project,
-    [Option('c', Description = "CSV file to output results to")] string? csvfile) =>
+    [Option('j', Description = "JSON file to output results to")] string? jsonfile,
+    [Option('c', Description = "CSV file to output results to")] string? csvfile
+    ) =>
 {
     var projectFilePackageReferences = new List<Models.PackageReference>();
     var packageConfigFileReferences = new List<Models.PackageReference>();
@@ -100,13 +102,17 @@ app.AddCommand((ILogger<Program> logger,
         }
     }
 
-    if (differences.Count != 0)
+    // print differences to JSON file `jsonfile`
+    if (jsonfile is not null)
     {
-        logger.LogInformation("Differences:\n{differences}", JsonSerializer.Serialize(differences, jsonIndentOptions));
+        using var writer = jsonfile == "-" ? Console.Out : new StreamWriter(jsonfile);
+        writer.WriteLine(JsonSerializer.Serialize(differences, jsonIndentOptions));
     }
-    else
+
+    // If neither jsonfile nor csvfile is specified, print to console
+    if (jsonfile is null && csvfile is null)
     {
-        logger.LogInformation("No differences found.");
+        Console.WriteLine(JsonSerializer.Serialize(differences, jsonIndentOptions));
     }
 });
 
