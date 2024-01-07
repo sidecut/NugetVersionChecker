@@ -59,7 +59,9 @@ app.AddCommand((ILogger<Program> logger,
         logger.LogDebug("  {name} {version}", name, version);
         packageReferences.Add(new Models.PackageReference(name!, version));
     }
-    Console.WriteLine(JsonSerializer.Serialize(packageReferences, jsonIndentOptions));
+    // Console.WriteLine(JsonSerializer.Serialize(packageReferences, jsonIndentOptions));
+    Console.WriteLine(JsonSerializer.Serialize(
+        packageReferences.Where(x => x.Version is not null).OrderBy(x => x.Name).ThenBy(x => x.Version), jsonIndentOptions));
 });
 
 app.Run();
