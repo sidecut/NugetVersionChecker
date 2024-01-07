@@ -91,11 +91,12 @@ app.AddCommand((ILogger<Program> logger,
     // Print differences
     if (csvfile is not null)
     {
-        // Print CSV
-        Console.WriteLine("Name,ProjectFileVersion,PackagesConfigVersion");
+        // Print CSV to file `csvfile`
+        using var writer = csvfile == "-" ? Console.Out : new StreamWriter(csvfile);
+        writer.WriteLine("Name,ProjectFileVersion,PackagesConfigVersion");
         foreach (var difference in differences)
         {
-            Console.WriteLine($"{difference.Name},{difference.ProjectFileVersion},{difference.PackagesConfigVersion}");
+            writer.WriteLine($"{difference.Name},{difference.ProjectFileVersion},{difference.PackagesConfigVersion}");
         }
     }
 
