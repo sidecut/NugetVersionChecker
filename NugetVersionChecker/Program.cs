@@ -17,7 +17,8 @@ var jsonIndentOptions = new JsonSerializerOptions
 var app = builder.Build();
 app.AddCommand((ILogger<Program> logger,
     [Option('p', Description = "Project file name, e.g. /path/to/project/myproject.csproj")]
-    [PathExists] string project) =>
+    [PathExists] string project,
+    bool printCsv) =>
 {
     var projectFilePackageReferences = new List<Models.PackageReference>();
     var packageConfigFileReferences = new List<Models.PackageReference>();
@@ -88,13 +89,25 @@ app.AddCommand((ILogger<Program> logger,
     }
 
     // Print differences
-    if (differences.Count != 0)
+    if (printCsv)
     {
-        logger.LogInformation("Differences:\n{differences}", JsonSerializer.Serialize(differences, jsonIndentOptions));
+        // Print CSV
+        Console.WriteLine("Name,ProjectFileVersion,PackagesConfigVersion");
+        foreach (var difference in differences)
+        {
+            Console.WriteLine($"{difference.Name},{difference.ProjectFileVersion},{difference.PackagesConfigVersion}");
+        }
     }
     else
     {
-        logger.LogInformation("No differences found.");
+        if (differences.Count != 0)
+        {
+            logger.LogInformation("Differences:\n{differences}", JsonSerializer.Serialize(differences, jsonIndentOptions));
+        }
+        else
+        {
+            logger.LogInformation("No differences found.");
+        }
     }
 });
 
