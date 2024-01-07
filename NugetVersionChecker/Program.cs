@@ -96,7 +96,12 @@ app.AddCommand((ILogger<Program> logger,
     // Print differences
     if (csvfile is not null)
     {
-        // Print CSV to file `csvfile`
+        // If no CSV extension, add it
+        if (!csvfile.EndsWith(".csv"))
+        {
+            csvfile += ".csv";
+        }
+
         logger.LogInformation("Writing CSV to {csvfile}", csvfile);
 
         using var writer = csvfile == "-" ? Console.Out : new StreamWriter(csvfile);
@@ -110,6 +115,12 @@ app.AddCommand((ILogger<Program> logger,
     // print differences to JSON file `jsonfile`
     if (jsonfile is not null)
     {
+        // if no JSON extension, add it
+        if (!jsonfile.EndsWith(".json"))
+        {
+            jsonfile += ".json";
+        }
+
         logger.LogInformation("Writing JSON to {jsonfile}", jsonfile);
         using var writer = jsonfile == "-" ? Console.Out : new StreamWriter(jsonfile);
         writer.WriteLine(JsonSerializer.Serialize(differences, jsonIndentOptions));
