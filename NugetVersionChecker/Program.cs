@@ -18,7 +18,7 @@ var app = builder.Build();
 app.AddCommand((ILogger<Program> logger,
     [Option('p', Description = "Project file name, e.g. /path/to/project/myproject.csproj")]
     [PathExists] string project,
-    bool printCsv) =>
+    [Option('c', Description = "CSV file to output results to")] string? csvfile) =>
 {
     var projectFilePackageReferences = new List<Models.PackageReference>();
     var packageConfigFileReferences = new List<Models.PackageReference>();
@@ -89,7 +89,7 @@ app.AddCommand((ILogger<Program> logger,
     }
 
     // Print differences
-    if (printCsv)
+    if (csvfile is not null)
     {
         // Print CSV
         Console.WriteLine("Name,ProjectFileVersion,PackagesConfigVersion");
@@ -98,16 +98,14 @@ app.AddCommand((ILogger<Program> logger,
             Console.WriteLine($"{difference.Name},{difference.ProjectFileVersion},{difference.PackagesConfigVersion}");
         }
     }
+
+    if (differences.Count != 0)
+    {
+        logger.LogInformation("Differences:\n{differences}", JsonSerializer.Serialize(differences, jsonIndentOptions));
+    }
     else
     {
-        if (differences.Count != 0)
-        {
-            logger.LogInformation("Differences:\n{differences}", JsonSerializer.Serialize(differences, jsonIndentOptions));
-        }
-        else
-        {
-            logger.LogInformation("No differences found.");
-        }
+        logger.LogInformation("No differences found.");
     }
 });
 
