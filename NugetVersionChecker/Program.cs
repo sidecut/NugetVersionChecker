@@ -90,6 +90,9 @@ app.AddCommand((ILogger<Program> logger,
         }
     }
 
+    // Write number of differences
+    logger.LogInformation("Found {differences} differences", differences.Count);
+
     // Print differences
     if (csvfile is not null)
     {
