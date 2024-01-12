@@ -95,7 +95,9 @@ app.AddCommand((ILogger<Program> logger,
     // Write number of differences
     logger.LogInformation("Found {differences} differences", differences.Count);
 
-    // Print differences to CSV file `csvfile`
+    var sortedDifferences = differences.OrderBy(x => x.Name).ThenBy(x => x.ProjectFileVersion).ThenBy(x => x.PackagesConfigVersion).ThenBy(x => x.TargetFramework);
+
+    // Print sorted differences to CSV file `csvfile`
     if (csvfile is not null)
     {
         // If filename is `.`, make it base filename plus .csv
@@ -113,13 +115,13 @@ app.AddCommand((ILogger<Program> logger,
 
         using var writer = csvfile == "-" ? Console.Out : new StreamWriter(csvfile);
         writer.WriteLine("Name,ProjectFileVersion,PackagesConfigVersion,TargetFramework");
-        foreach (var difference in differences)
+        foreach (var difference in sortedDifferences)
         {
             writer.WriteLine($"{difference.Name},{difference.ProjectFileVersion},{difference.PackagesConfigVersion},{difference.TargetFramework}");
         }
     }
 
-    // Print differences to JSON file `jsonfile`
+    // Print sorted differences to JSON file `jsonfile`
     if (jsonfile is not null)
     {
         // If filename is `.`, make it base filename plus .json
@@ -135,14 +137,14 @@ app.AddCommand((ILogger<Program> logger,
 
         logger.LogInformation("Writing JSON to {jsonfile}", jsonfile == "-" ? "console:" : jsonfile);
         using var writer = jsonfile == "-" ? Console.Out : new StreamWriter(jsonfile);
-        writer.WriteLine(JsonSerializer.Serialize(differences, jsonIndentOptions));
+        writer.WriteLine(JsonSerializer.Serialize(sortedDifferences, jsonIndentOptions));
     }
 
     // If neither jsonfile nor csvfile is specified, print to console
     if (jsonfile is null && csvfile is null)
     {
         logger.LogInformation("Writing JSON to console");
-        Console.WriteLine(JsonSerializer.Serialize(differences, jsonIndentOptions));
+        Console.WriteLine(JsonSerializer.Serialize(sortedDifferences, jsonIndentOptions));
     }
 });
 
