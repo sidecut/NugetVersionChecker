@@ -44,7 +44,7 @@ app.AddCommand((ILogger<Program> logger,
                     select new KeyValuePair<string, string>(kv[0], kv[1]);
         var version = pairs.FirstOrDefault(x => x.Key.Equals("Version", StringComparison.CurrentCultureIgnoreCase)).Value;
 
-        logger.LogDebug("  {name} {version}", name, version);
+        logger.LogTrace("  {name} {version}", name, version);
         projectFilePackageReferences.Add(new Models.PackageReference(name!, version));
     }
     logger.LogDebug("{projectFilePackageReferences}", JsonSerializer.Serialize(
@@ -63,7 +63,7 @@ app.AddCommand((ILogger<Program> logger,
         {
             var id = packageElement.Attribute("id")?.Value;
             var version = packageElement.Attribute("version")?.Value;
-            logger.LogDebug("  {id} {version}", id, version);
+            logger.LogTrace("  {id} {version}", id, version);
             packageConfigFileReferences.Add(new Models.PackageReference(id!, version));
         }
         // Console.WriteLine(JsonSerializer.Serialize(packageReferences, jsonIndentOptions));
