@@ -486,3 +486,5 @@ $RECYCLE.BIN/
 ### Customizations
 *.csv
 *.json
+!appsettings.json
+!appsettings.*.json
