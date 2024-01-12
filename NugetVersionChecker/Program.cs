@@ -63,8 +63,9 @@ app.AddCommand((ILogger<Program> logger,
         {
             var id = packageElement.Attribute("id")?.Value;
             var version = packageElement.Attribute("version")?.Value;
-            logger.LogTrace("  {id} {version}", id, version);
-            packageConfigFileReferences.Add(new Models.PackageReference(id!, version));
+            var targetFramework = packageElement.Attribute("targetFramework")?.Value;
+            logger.LogTrace("  {id} {version} {targetFramework}", id, version, targetFramework);
+            packageConfigFileReferences.Add(new Models.PackageReference(id!, version, targetFramework));
         }
         // Console.WriteLine(JsonSerializer.Serialize(packageReferences, jsonIndentOptions));
         logger.LogDebug("{packageConfigFileReferences}", JsonSerializer.Serialize(
@@ -86,14 +87,15 @@ app.AddCommand((ILogger<Program> logger,
         else if (projectFilePackageReference.Version != packageConfigFilePackageReference.Version)
         {
             // Add this difference if the package is in packages.config but the version is different
-            differences.Add(new Models.PackageReferenceDifference(projectFilePackageReference.Name, projectFilePackageReference.Version, packageConfigFilePackageReference.Version));
+            differences.Add(new Models.PackageReferenceDifference(projectFilePackageReference.Name, projectFilePackageReference.Version,
+                 packageConfigFilePackageReference.Version, packageConfigFilePackageReference.TargetFramework));
         }
     }
 
     // Write number of differences
     logger.LogInformation("Found {differences} differences", differences.Count);
 
-    // Print differences
+    // Print differences to CSV file `csvfile`
     if (csvfile is not null)
     {
         // If filename is `.`, make it base filename plus .csv
@@ -110,14 +112,14 @@ app.AddCommand((ILogger<Program> logger,
         logger.LogInformation("Writing CSV to {csvfile}", csvfile == "-" ? "console:" : csvfile);
 
         using var writer = csvfile == "-" ? Console.Out : new StreamWriter(csvfile);
-        writer.WriteLine("Name,ProjectFileVersion,PackagesConfigVersion");
+        writer.WriteLine("Name,ProjectFileVersion,PackagesConfigVersion,TargetFramework");
         foreach (var difference in differences)
         {
-            writer.WriteLine($"{difference.Name},{difference.ProjectFileVersion},{difference.PackagesConfigVersion}");
+            writer.WriteLine($"{difference.Name},{difference.ProjectFileVersion},{difference.PackagesConfigVersion},{difference.TargetFramework}");
         }
     }
 
-    // print differences to JSON file `jsonfile`
+    // Print differences to JSON file `jsonfile`
     if (jsonfile is not null)
     {
         // If filename is `.`, make it base filename plus .json
